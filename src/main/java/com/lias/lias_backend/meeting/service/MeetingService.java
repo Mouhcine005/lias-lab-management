@@ -6,6 +6,7 @@ import com.lias.lias_backend.meeting.entity.Meeting;
 import com.lias.lias_backend.meeting.repository.MeetingRepository;
 import com.lias.lias_backend.member.entity.Member;
 import com.lias.lias_backend.member.repository.MemberRepository;
+import com.lias.lias_backend.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,30 +26,27 @@ public class MeetingService {
 
     private final MeetingRepository meetingRepository;
     private final MemberRepository memberRepository;
+    private final NotificationService notificationService;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
 
-    // Get all meetings
     public List<MeetingResponse> getAllMeetings() {
         return meetingRepository.findByOrderByDateDesc()
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    // Get meeting by id
     public MeetingResponse getMeeting(Long id) {
         Meeting meeting = meetingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Meeting not found"));
         return toResponse(meeting);
     }
 
-    // Get by status
     public List<MeetingResponse> getByStatus(Meeting.MeetingStatus status) {
         return meetingRepository.findByStatus(status)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    // Create meeting
     @Transactional
     public MeetingResponse createMeeting(MeetingRequest request) {
         Member creator = getCurrentMember();
@@ -63,10 +61,17 @@ public class MeetingService {
                 .createdBy(creator)
                 .build();
 
-        return toResponse(meetingRepository.save(meeting));
+        MeetingResponse response = toResponse(meetingRepository.save(meeting));
+
+        // Notify all active members of new meeting
+        notificationService.notifyNewMeeting(
+                request.getTitle(),
+                request.getDate().toString()
+        );
+
+        return response;
     }
 
-    // Update meeting
     @Transactional
     public MeetingResponse updateMeeting(Long id, MeetingRequest request) {
         Meeting meeting = meetingRepository.findById(id)
@@ -82,7 +87,6 @@ public class MeetingService {
         return toResponse(meetingRepository.save(meeting));
     }
 
-    // Upload PV
     @Transactional
     public MeetingResponse uploadPV(Long meetingId, MultipartFile file) throws IOException {
         Meeting meeting = meetingRepository.findById(meetingId)
@@ -108,7 +112,6 @@ public class MeetingService {
         return toResponse(meetingRepository.save(meeting));
     }
 
-    // Download PV
     public Path getPVPath(Long meetingId) {
         Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new RuntimeException("Meeting not found"));
@@ -117,7 +120,6 @@ public class MeetingService {
         return Paths.get(uploadDir).resolve(meeting.getPvFilePath());
     }
 
-    // Update status
     @Transactional
     public MeetingResponse updateStatus(Long id, Meeting.MeetingStatus status) {
         Meeting meeting = meetingRepository.findById(id)
@@ -126,15 +128,12 @@ public class MeetingService {
         return toResponse(meetingRepository.save(meeting));
     }
 
-    // Delete meeting
     @Transactional
     public void deleteMeeting(Long id) {
         if (!meetingRepository.existsById(id))
             throw new RuntimeException("Meeting not found");
         meetingRepository.deleteById(id);
     }
-
-    // --- helpers ---
 
     private Member getCurrentMember() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();

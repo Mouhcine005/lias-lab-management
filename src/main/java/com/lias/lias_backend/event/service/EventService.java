@@ -6,6 +6,7 @@ import com.lias.lias_backend.event.entity.Event;
 import com.lias.lias_backend.event.repository.EventRepository;
 import com.lias.lias_backend.member.entity.Member;
 import com.lias.lias_backend.member.repository.MemberRepository;
+import com.lias.lias_backend.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -20,40 +21,35 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final MemberRepository memberRepository;
+    private final NotificationService notificationService;
 
-    // Get all events
     public List<EventResponse> getAllEvents() {
         return eventRepository.findAll()
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    // Get event by id
     public EventResponse getEvent(Long id) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
         return toResponse(event);
     }
 
-    // Get by type
     public List<EventResponse> getByType(Event.EventType type) {
         return eventRepository.findByType(type)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    // Get by status
     public List<EventResponse> getByStatus(Event.EventStatus status) {
         return eventRepository.findByStatus(status)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    // Get events organized by current user
     public List<EventResponse> getMyEvents() {
         Member member = getCurrentMember();
         return eventRepository.findByOrganizerId(member.getId())
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    // Create event (ADMIN, DIRECTOR only)
     @Transactional
     public EventResponse createEvent(EventRequest request) {
         Member organizer = getCurrentMember();
@@ -71,10 +67,11 @@ public class EventService {
                 .organizer(organizer)
                 .build();
 
-        return toResponse(eventRepository.save(event));
+        EventResponse response = toResponse(eventRepository.save(event));
+        notificationService.notifyNewEvent(request.getTitle());
+        return response;
     }
 
-    // Update event
     @Transactional
     public EventResponse updateEvent(Long id, EventRequest request) {
         Event event = eventRepository.findById(id)
@@ -93,7 +90,6 @@ public class EventService {
         return toResponse(eventRepository.save(event));
     }
 
-    // Update event status only
     @Transactional
     public EventResponse updateStatus(Long id, Event.EventStatus status) {
         Event event = eventRepository.findById(id)
@@ -102,15 +98,12 @@ public class EventService {
         return toResponse(eventRepository.save(event));
     }
 
-    // Delete event
     @Transactional
     public void deleteEvent(Long id) {
         if (!eventRepository.existsById(id))
             throw new RuntimeException("Event not found");
         eventRepository.deleteById(id);
     }
-
-    // --- helpers ---
 
     private Member getCurrentMember() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();

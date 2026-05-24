@@ -6,6 +6,7 @@ import com.lias.lias_backend.member.entity.User;
 import com.lias.lias_backend.member.repository.AffiliationRepository;
 import com.lias.lias_backend.member.repository.MemberRepository;
 import com.lias.lias_backend.member.repository.UserRepository;
+import com.lias.lias_backend.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class AdminService {
     private final UserRepository userRepository;
     private final MemberRepository memberRepository;
     private final AffiliationRepository affiliationRepository;
+    private final NotificationService notificationService;
 
     // List all members
     public List<AdminMemberResponse> getAllMembers() {
@@ -49,6 +51,9 @@ public class AdminService {
 
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
+
+        notificationService.notifyMemberApproved(member);
+
         return toResponse(member);
     }
 
@@ -66,6 +71,9 @@ public class AdminService {
 
         Member member = memberRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
+
+        notificationService.notifyMemberRejected(member);
+
         return toResponse(member);
     }
 
