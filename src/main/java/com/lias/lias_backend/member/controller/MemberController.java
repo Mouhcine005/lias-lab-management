@@ -4,8 +4,12 @@ import com.lias.lias_backend.member.dto.*;
 import com.lias.lias_backend.member.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/members")
@@ -28,5 +32,24 @@ public class MemberController {
     @GetMapping("/{id}")
     public ResponseEntity<MemberProfileResponse> getMember(@PathVariable Long id) {
         return ResponseEntity.ok(memberService.getProfile(id));
+    }
+
+    /**
+     * POST /api/members/me/photo
+     * Upload or replace my profile photo.
+     */
+    @PostMapping(value = "/me/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<MemberProfileResponse> uploadPhoto(
+            @RequestPart("photo") MultipartFile photo) throws IOException {
+        return ResponseEntity.ok(memberService.uploadPhoto(photo));
+    }
+
+    /**
+     * GET /api/members/{id}/photo
+     * Serve the profile photo of any member.
+     */
+    @GetMapping("/{id}/photo")
+    public ResponseEntity<byte[]> getPhoto(@PathVariable Long id) throws IOException {
+        return memberService.getPhoto(id);
     }
 }
