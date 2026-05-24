@@ -3,7 +3,9 @@ package com.lias.lias_backend.governance.repository;
 import com.lias.lias_backend.governance.entity.Mandate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,4 +24,7 @@ public interface MandateRepository extends JpaRepository<Mandate, Long> {
     // Find active mandate for a specific member
     @Query("SELECT m FROM Mandate m WHERE m.member.id = :memberId AND (m.endDate IS NULL OR m.endDate > CURRENT_DATE)")
     List<Mandate> findActiveByMemberId(Long memberId);
+
+    @Query("SELECT m FROM Mandate m WHERE m.startDate <= :to AND (m.endDate IS NULL OR m.endDate >= :from)")
+    List<Mandate> findActiveInPeriod(@Param("from") LocalDate from, @Param("to") LocalDate to);
 }

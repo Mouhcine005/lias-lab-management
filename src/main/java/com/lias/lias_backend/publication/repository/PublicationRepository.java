@@ -9,4 +9,5 @@ public interface PublicationRepository extends JpaRepository<Publication, Long> 
     List<Publication> findByYear(Integer year);
     List<Publication> findByTeam(String team);
     List<Publication> findByMemberIdOrderByYearDesc(Long memberId);
+    List<Publication> findByYear(int year);
 }
