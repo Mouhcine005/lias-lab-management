@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity          // enables @PreAuthorize on controllers
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -31,12 +31,19 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // ── Public ────────────────────────────────────────
+                        .requestMatchers("/api/auth/**", "/api-docs").permitAll()
+
+                        // ── Admin ─────────────────────────────────────────
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // ── Members ───────────────────────────────────────
                         .requestMatchers("/api/members/all").hasAnyRole("ADMIN", "DIRECTOR")
                         .requestMatchers(HttpMethod.GET, "/api/members/{id}").hasAnyRole("ADMIN", "DIRECTOR", "MEMBER", "DOCTORAL")
                         .requestMatchers(HttpMethod.GET, "/api/members/me").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/members/me").authenticated()
+
+                        // ── Everything else requires auth ─────────────────
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
