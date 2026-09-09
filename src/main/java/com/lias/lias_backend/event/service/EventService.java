@@ -1,6 +1,5 @@
 package com.lias.lias_backend.event.service;
 
-import com.lias.lias_backend.audit.service.AuditService;
 import com.lias.lias_backend.event.dto.EventRequest;
 import com.lias.lias_backend.event.dto.EventResponse;
 import com.lias.lias_backend.event.entity.Event;
@@ -23,7 +22,6 @@ public class EventService {
     private final EventRepository eventRepository;
     private final MemberRepository memberRepository;
     private final NotificationService notificationService;
-    private final AuditService auditService;
 
     public List<EventResponse> getAllEvents() {
         return eventRepository.findAll()
@@ -71,7 +69,6 @@ public class EventService {
 
         EventResponse response = toResponse(eventRepository.save(event));
         notificationService.notifyNewEvent(request.getTitle());
-        auditService.log("EVENT_CREATED", "Event", event.getId(), "Event created: " + event.getTitle());
         return response;
     }
 
@@ -103,10 +100,9 @@ public class EventService {
 
     @Transactional
     public void deleteEvent(Long id) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
-        eventRepository.delete(event);
-        auditService.log("EVENT_DELETED", "Event", id, "Event deleted: " + event.getTitle());
+        if (!eventRepository.existsById(id))
+            throw new RuntimeException("Event not found");
+        eventRepository.deleteById(id);
     }
 
     private Member getCurrentMember() {

@@ -1,6 +1,5 @@
 package com.lias.lias_backend.meeting.service;
 
-import com.lias.lias_backend.audit.service.AuditService;
 import com.lias.lias_backend.meeting.dto.MeetingRequest;
 import com.lias.lias_backend.meeting.dto.MeetingResponse;
 import com.lias.lias_backend.meeting.entity.Meeting;
@@ -28,7 +27,6 @@ public class MeetingService {
     private final MeetingRepository meetingRepository;
     private final MemberRepository memberRepository;
     private final NotificationService notificationService;
-    private final AuditService auditService;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -70,8 +68,6 @@ public class MeetingService {
                 request.getTitle(),
                 request.getDate().toString()
         );
-        auditService.log("MEETING_CREATED", "Meeting", meeting.getId(),
-                "Meeting created: " + meeting.getTitle());
 
         return response;
     }
@@ -134,10 +130,9 @@ public class MeetingService {
 
     @Transactional
     public void deleteMeeting(Long id) {
-        Meeting meeting = meetingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Meeting not found"));
-        meetingRepository.delete(meeting);
-        auditService.log("MEETING_DELETED", "Meeting", id, "Meeting deleted: " + meeting.getTitle());
+        if (!meetingRepository.existsById(id))
+            throw new RuntimeException("Meeting not found");
+        meetingRepository.deleteById(id);
     }
 
     private Member getCurrentMember() {

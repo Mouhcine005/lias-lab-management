@@ -1,6 +1,5 @@
 package com.lias.lias_backend.governance.service;
 
-import com.lias.lias_backend.audit.service.AuditService;
 import com.lias.lias_backend.governance.dto.MandateRequest;
 import com.lias.lias_backend.governance.dto.MandateResponse;
 import com.lias.lias_backend.governance.entity.Mandate;
@@ -21,7 +20,6 @@ public class MandateService {
 
     private final MandateRepository mandateRepository;
     private final MemberRepository memberRepository;
-    private final AuditService auditService;
 
     // Get all mandates
     public List<MandateResponse> getAllMandates() {
@@ -82,10 +80,7 @@ public class MandateService {
                 .team(request.getTeam())
                 .build();
 
-        Mandate saved = mandateRepository.save(mandate);
-        auditService.log("MANDATE_CREATED", "Mandate", saved.getId(),
-                "Mandate " + saved.getRole() + " assigned to " + member.getFirstName() + " " + member.getLastName());
-        return toResponse(saved);
+        return toResponse(mandateRepository.save(mandate));
     }
 
     // End a mandate
@@ -94,20 +89,15 @@ public class MandateService {
         Mandate mandate = mandateRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Mandate not found"));
         mandate.setEndDate(LocalDate.now());
-        Mandate saved = mandateRepository.save(mandate);
-        auditService.log("MANDATE_ENDED", "Mandate", saved.getId(),
-                "Mandate " + saved.getRole() + " ended");
-        return toResponse(saved);
+        return toResponse(mandateRepository.save(mandate));
     }
 
     // Delete a mandate
     @Transactional
     public void deleteMandate(Long id) {
-        Mandate mandate = mandateRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Mandate not found"));
-        auditService.log("MANDATE_DELETED", "Mandate", id,
-                "Mandate " + mandate.getRole() + " deleted");
-        mandateRepository.delete(mandate);
+        if (!mandateRepository.existsById(id))
+            throw new RuntimeException("Mandate not found");
+        mandateRepository.deleteById(id);
     }
 
     // --- helper ---

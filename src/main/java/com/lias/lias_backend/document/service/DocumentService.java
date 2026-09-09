@@ -1,6 +1,5 @@
 package com.lias.lias_backend.document.service;
 
-import com.lias.lias_backend.audit.service.AuditService;
 import com.lias.lias_backend.document.dto.DocumentRequest;
 import com.lias.lias_backend.document.dto.DocumentResponse;
 import com.lias.lias_backend.document.entity.Document;
@@ -31,7 +30,6 @@ public class DocumentService {
     private final MemberRepository memberRepository;
     private final EventRepository eventRepository;
     private final NotificationService notificationService;
-    private final AuditService auditService;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -91,8 +89,6 @@ public class DocumentService {
                 originalFilename,
                 event != null ? event.getTitle() : null
         );
-        auditService.log("DOCUMENT_UPLOADED", "Document", document.getId(),
-                "Uploaded: " + originalFilename);
 
         return response;
     }
@@ -154,7 +150,6 @@ public class DocumentService {
         Path filePath = Paths.get(uploadDir).resolve(document.getFilePath());
         Files.deleteIfExists(filePath);
         documentRepository.delete(document);
-        auditService.log("DOCUMENT_DELETED", "Document", id, "Deleted document: " + document.getFileName());
     }
 
     private Member getCurrentMember() {

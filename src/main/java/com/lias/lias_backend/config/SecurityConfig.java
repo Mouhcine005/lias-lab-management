@@ -40,9 +40,6 @@ public class SecurityConfig {
                         // ── Public ────────────────────────────────────────
                         .requestMatchers("/api/auth/**", "/api-docs").permitAll()
 
-                        // ── Conventions — public reads, protected writes ──
-                        .requestMatchers(HttpMethod.GET, "/api/conventions/**").permitAll()
-
                         // ── Admin ─────────────────────────────────────────
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
