@@ -43,7 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/membership-requests").permitAll()
 
                         // ── Admin ─────────────────────────────────────────
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "DIRECTOR")
 
                         // ── Members ───────────────────────────────────────
                         .requestMatchers("/api/members/all").hasAnyRole("ADMIN", "DIRECTOR")
