@@ -95,6 +95,40 @@ public class NotificationService {
         sendEmail(member.getUser().getEmail(), title, message);
     }
 
+    // Called when someone submits a membership request (spec §6) — notify
+// all ADMINs/DIRECTORs. No Member/User exists yet for the applicant.
+    @Transactional
+    public void notifyNewMembershipRequest(String applicantEmail) {
+        List<Member> admins = memberRepository.findAll().stream()
+                .filter(m -> m.getUser().getRole() == User.UserRole.ADMIN
+                        || m.getUser().getRole() == User.UserRole.DIRECTOR)
+                .filter(m -> m.getUser().getStatus() == User.UserStatus.ACTIVE)
+                .collect(Collectors.toList());
+
+        String title = "New Membership Request";
+        String message = "A new membership request has been submitted: " + applicantEmail;
+
+        for (Member admin : admins) {
+            saveNotification(admin, title, message, Notification.NotificationType.NEW_MEMBER_PENDING);
+            sendEmail(admin.getUser().getEmail(), title, message);
+        }
+    }
+
+    // Called when a membership request is accepted — the applicant has no
+// Member/User record until this point, so we email them directly.
+    public void notifyMembershipRequestAccepted(String applicantEmail) {
+        String title = "Membership Request Accepted";
+        String message = "Your LIAS membership request has been accepted. You can now log in with the email and password you provided.";
+        sendEmail(applicantEmail, title, message);
+    }
+
+    // Called when a membership request is rejected
+    public void notifyMembershipRequestRejected(String applicantEmail, String reason) {
+        String title = "Membership Request Rejected";
+        String message = "Your LIAS membership request has been rejected."
+                + (reason != null && !reason.isBlank() ? " Reason: " + reason : "");
+        sendEmail(applicantEmail, title, message);
+    }
     // Called on reject — notify the member
     @Transactional
     public void notifyMemberRejected(Member member) {

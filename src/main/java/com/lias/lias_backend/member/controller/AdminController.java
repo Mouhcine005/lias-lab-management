@@ -17,43 +17,36 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    // List all members
     @GetMapping("/members")
     public ResponseEntity<List<AdminMemberResponse>> getAllMembers() {
         return ResponseEntity.ok(adminService.getAllMembers());
     }
 
-    // List pending approvals
     @GetMapping("/members/pending")
     public ResponseEntity<List<AdminMemberResponse>> getPendingMembers() {
         return ResponseEntity.ok(adminService.getPendingMembers());
     }
 
-    // Approve a pending member
     @PatchMapping("/members/{userId}/approve")
     public ResponseEntity<AdminMemberResponse> approveMember(@PathVariable Long userId) {
         return ResponseEntity.ok(adminService.approveMember(userId));
     }
 
-    // Reject a pending member
     @PatchMapping("/members/{userId}/reject")
     public ResponseEntity<AdminMemberResponse> rejectMember(@PathVariable Long userId) {
         return ResponseEntity.ok(adminService.rejectMember(userId));
     }
 
-    // Freeze an active member
     @PatchMapping("/members/{userId}/freeze")
     public ResponseEntity<AdminMemberResponse> freezeMember(@PathVariable Long userId) {
         return ResponseEntity.ok(adminService.freezeMember(userId));
     }
 
-    // Reactivate a frozen/disabled member
     @PatchMapping("/members/{userId}/activate")
     public ResponseEntity<AdminMemberResponse> activateMember(@PathVariable Long userId) {
         return ResponseEntity.ok(adminService.activateMember(userId));
     }
 
-    // Change user role (MEMBER, DIRECTOR, ADMIN etc.)
     @PatchMapping("/members/{userId}/role")
     public ResponseEntity<AdminMemberResponse> changeRole(
             @PathVariable Long userId,
@@ -61,11 +54,22 @@ public class AdminController {
         return ResponseEntity.ok(adminService.changeRole(userId, role));
     }
 
-    // Change member status (PERMANENT, ASSOCIATE, DOCTORAL etc.)
     @PatchMapping("/members/{memberId}/status")
     public ResponseEntity<AdminMemberResponse> changeMemberStatus(
             @PathVariable Long memberId,
             @RequestParam String status) {
         return ResponseEntity.ok(adminService.changeMemberStatus(memberId, status));
+    }
+
+    @GetMapping("/members/{userId}/role-history")
+    public ResponseEntity<List<com.lias.lias_backend.history.dto.RoleHistoryResponse>> getRoleHistory(
+            @PathVariable Long userId) {
+        return ResponseEntity.ok(adminService.getRoleHistory(userId));
+    }
+
+    @GetMapping("/members/{memberId}/status-history")
+    public ResponseEntity<List<com.lias.lias_backend.history.dto.MemberStatusHistoryResponse>> getMemberStatusHistory(
+            @PathVariable Long memberId) {
+        return ResponseEntity.ok(adminService.getMemberStatusHistory(memberId));
     }
 }

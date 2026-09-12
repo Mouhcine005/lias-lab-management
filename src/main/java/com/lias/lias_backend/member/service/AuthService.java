@@ -3,6 +3,10 @@ package com.lias.lias_backend.member.service;
 import com.lias.lias_backend.member.dto.*;
 import com.lias.lias_backend.member.entity.*;
 import com.lias.lias_backend.member.repository.*;
+import com.lias.lias_backend.history.entity.MemberStatusHistory;
+import com.lias.lias_backend.history.entity.RoleHistory;
+import com.lias.lias_backend.history.repository.MemberStatusHistoryRepository;
+import com.lias.lias_backend.history.repository.RoleHistoryRepository;
 import com.lias.lias_backend.notification.service.NotificationService;
 import com.lias.lias_backend.security.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +29,8 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final NotificationService notificationService;
+    private final RoleHistoryRepository roleHistoryRepository;
+    private final MemberStatusHistoryRepository memberStatusHistoryRepository;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -56,6 +62,19 @@ public class AuthService {
                 .startDate(LocalDate.now())
                 .build();
         affiliationRepository.save(affiliation);
+        roleHistoryRepository.save(RoleHistory.builder()
+                .user(user)
+                .role(user.getRole())
+                .startDate(LocalDate.now())
+                .changedBy("system")
+                .build());
+
+        memberStatusHistoryRepository.save(MemberStatusHistory.builder()
+                .member(member)
+                .status(member.getStatus())
+                .startDate(LocalDate.now())
+                .changedBy("system")
+                .build());
 
         // 4. Notify admins/directors of new pending member
         notificationService.notifyNewMemberPending(user.getEmail());

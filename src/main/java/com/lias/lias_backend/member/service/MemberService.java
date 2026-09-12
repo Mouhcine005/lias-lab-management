@@ -137,6 +137,7 @@ public class MemberService {
     private MemberProfileResponse toResponse(Member member) {
         MemberProfileResponse response = new MemberProfileResponse();
         response.setId(member.getId());
+        response.setUserId(member.getUser().getId());
         response.setEmail(member.getUser().getEmail());
         response.setFirstName(member.getFirstName());
         response.setLastName(member.getLastName());

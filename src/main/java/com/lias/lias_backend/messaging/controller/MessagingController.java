@@ -12,7 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/messaging")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('MEMBER', 'DOCTORAL', 'DIRECTOR', 'ADMIN')")
+@PreAuthorize("hasAnyRole('MEMBER', 'DIRECTOR', 'ADMIN')")
 public class MessagingController {
 
     private final MessagingService messagingService;

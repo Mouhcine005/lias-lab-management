@@ -7,6 +7,7 @@ import java.time.LocalDate;
 @Data
 public class MemberProfileResponse {
     private Long id;
+    private Long userId;
     private String email;
     private String firstName;
     private String lastName;

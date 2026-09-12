@@ -41,9 +41,10 @@ public class EquipmentController {
         return ResponseEntity.noContent().build();
     }
 
-    // ── QUERIES (any authenticated) ───────────────────────────
+    // ── QUERIES — doctorants excluded (spec §2.2.C) ───────────
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR', 'MEMBER')")
     public ResponseEntity<List<EquipmentResponse>> getAllEquipment(
             @RequestParam(required = false) String search) {
         if (search != null && !search.isBlank()) {
@@ -53,11 +54,13 @@ public class EquipmentController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR', 'MEMBER')")
     public ResponseEntity<EquipmentResponse> getEquipmentById(@PathVariable Long id) {
         return ResponseEntity.ok(equipmentService.getEquipmentById(id));
     }
 
     @GetMapping("/available")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR', 'MEMBER')")
     public ResponseEntity<List<EquipmentResponse>> getAvailableEquipment() {
         return ResponseEntity.ok(equipmentService.getAvailableEquipment());
     }
@@ -101,14 +104,18 @@ public class EquipmentController {
         return ResponseEntity.ok(equipmentService.getMemberIdsWithNoEquipment());
     }
 
-    // ── REQUESTS (any authenticated) ──────────────────────────
+    // ── REQUESTS — doctorants excluded (spec §2.2.C treats equipment as an
+    // internal module; if you'd rather let doctorants request equipment,
+    // just widen these two back to any authenticated user) ───────
 
     @PostMapping("/requests")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR', 'MEMBER')")
     public ResponseEntity<EquipmentRequestResponse> submitRequest(@Valid @RequestBody EquipmentRequestDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(equipmentService.submitRequest(dto));
     }
 
     @GetMapping("/requests/my")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR', 'MEMBER')")
     public ResponseEntity<List<EquipmentRequestResponse>> getMyRequests() {
         return ResponseEntity.ok(equipmentService.getMyRequests());
     }

@@ -36,20 +36,23 @@ public class DocumentController {
         return ResponseEntity.ok(documentService.uploadDocument(file, description, type, eventId));
     }
 
-    // Get all documents
+    // Get all documents — doctorants excluded (spec §2.2.C: "Aucun accès aux modules internes")
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR', 'MEMBER')")
     public ResponseEntity<List<DocumentResponse>> getAll() {
         return ResponseEntity.ok(documentService.getAllDocuments());
     }
 
-    // Get documents by event
+    // Get documents by event — doctorants excluded
     @GetMapping("/event/{eventId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR', 'MEMBER')")
     public ResponseEntity<List<DocumentResponse>> getByEvent(@PathVariable Long eventId) {
         return ResponseEntity.ok(documentService.getByEvent(eventId));
     }
 
-    // Get documents by type
+    // Get documents by type — doctorants excluded
     @GetMapping("/type/{type}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR', 'MEMBER')")
     public ResponseEntity<List<DocumentResponse>> getByType(@PathVariable String type) {
         return ResponseEntity.ok(documentService.getByType(type));
     }
@@ -68,8 +71,9 @@ public class DocumentController {
         return ResponseEntity.ok(documentService.getMyDocuments());
     }
 
-    // Download a document
+    // Download a document — doctorants excluded
     @GetMapping("/{id}/download")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR', 'MEMBER')")
     public ResponseEntity<Resource> download(@PathVariable Long id) throws MalformedURLException {
         Path filePath = documentService.getFilePath(id);
         Resource resource = new UrlResource(filePath.toUri());
